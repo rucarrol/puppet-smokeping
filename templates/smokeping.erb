@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# smokeping
+#
+# chkconfig: 23 92 8
+# description: smokeping
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+. /etc/profile
+
+# Load init config from sysconfig if present:
+if [ -f /etc/sysconfig/smokeping ]; then
+    . /etc/sysconfig/smokeping
+fi
+
+RETVAL=0
+PROG="smokeping"
+USER="smokeping"
+DIR="/opt/smokeping"
+LOGFILE="$DIR/var/log/smokeping.log"
+DAEMON="$DIR/bin/smokeping"
+
+start() {
+    # If TYPE = Slave:
+    if [ "x$TYPE" = "xslave" ]||[ "x$TYPE" = "xSLAVE" ]||[ "x$TYPE" = "xSlave" ]; then
+        # If Master URL is defined:
+        if [ ! "x$MASTER_URL" = "x" ]; then
+            su $USER -c "$DAEMON --master-url=$MASTER_URL --cache-dir=$DIR/cache/ --shared-secret=$DIR/secret.txt --logfile=$LOGFILE"
+            RETVAL=$?
+        # If Master URL is not defined:
+        else
+            echo "Slave configured, but no MasterURL defined."
+            RETVAL=1
+        fi
+    # If TYPE is not Slave (or not defined), run as Master.
+    else
+        su $USER -c "$DAEMON --logfile=$LOGFILE --config=/opt/smokeping/config.d/General"
+        RETVAL=$?
+    fi
+    echo "Starting $PROG:"
+    [ $RETVAL -eq 0 ]
+    return $RETVAL
+}
+
+stop() {
+    echo "Stopping $PROG:"
+    CGIPID=$(ps -ef | grep "smokeping_cgi" | grep -v grep | awk '{print}')
+    if [ "x" = "x" ]; then
+        pkill -u smokeping && kill 
+        RETVAL=$?
+    else
+        pkill -u smokeping
+        RETVAL=$?
+    fi
+    [ $RETVAL -eq 0 ]
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|reload)
+        stop
+        start
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $RETVAL
