@@ -7,9 +7,13 @@ class smokeping::install {
     if ! defined (Package['fping']) {
         package {'fping': ensure => installed; }
     }
-    if ! defined (Package['perl-doc']) {
-        package {'perl-doc': ensure => installed; }
-    }
+
+#CentOS sucks. Lets create some directories to make it happy
+
+        file { [ "/var/", "/var/cache/", "/var/cache/smokeping/", "/etc/smokeping/" ]:
+            ensure => "directory",
+        }
+        
 
     # correct permissions
     file {

@@ -51,14 +51,19 @@ class smokeping::config {
     file {
         '/etc/default/smokeping':
             content => template('smokeping/defaults.erb');
-        '/etc/smokeping/config.d/General':
+        '/opt/smokeping/config.d/General':
             content => template('smokeping/general.erb');
-        '/etc/smokeping/config.d/Probes':
+        '/opt/smokeping/config.d/Probes':
             content => template('smokeping/probes.erb');
-        '/etc/smokeping/config.d/Alerts':
+        '/opt/smokeping/config.d/Alerts':
             content => template('smokeping/alerts.erb');
-        '/etc/smokeping/config.d/pathnames':
+        '/opt/smokeping/config.d/pathnames':
             content => template('smokeping/pathnames.erb');
+        '/opt/smokeping/config.d/Database':
+            content => template('smokeping/Database.erb');
+        '/etc/init.d/smokeping':
+	    mode    => 500,
+            content => template('smokeping/smokeping.erb');
     }
 
     ## mode specific
@@ -89,13 +94,13 @@ class smokeping::config {
                 # collect slaves
                 File <<| tag == "smokeping-slave-${master_name}" |>>
                 file { $smokeping::slave_dir: ensure => directory; }
-                concat { '/etc/smokeping/config.d/Slaves':
+                concat { '/opt/smokeping/config.d/Slaves':
                     owner => root,
                     group => root,
                     mode  => '0644',
                 }
                 concat::fragment { 'slaves-header':
-                    target  => '/etc/smokeping/config.d/Slaves',
+                    target  => '/opt/smokeping/config.d/Slaves',
                     order   => 10,
                     content => "*** Slaves ***\nsecrets=${smokeping::slave_secrets}\n\n"
                 }
@@ -126,13 +131,13 @@ class smokeping::config {
                 purge   => true,
                 force   => true,
             }
-            concat { '/etc/smokeping/config.d/Targets':
+            concat { '/opt/smokeping/config.d/Targets':
                 owner => root,
                 group => root,
                 mode  => '0644',
             }
             concat::fragment { 'targets-header':
-                target  => '/etc/smokeping/config.d/Targets',
+                target  => '/opt/smokeping/config.d/Targets',
                 order   => 10,
                 content => template('smokeping/targets-header.erb'),
             }

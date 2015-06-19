@@ -30,12 +30,12 @@
 #   Remark displayed on Website
 #
 define smokeping::target (
-    $pagetitle = '',
-    $menu = '',
+    $pagetitle = 'Test',
+    $menu = 'Google',
     $hierarchy_level = 1,
     $hierarchy_parent = '',
-    $probe = '',
-    $host = '',
+    $probe = 'FPing',
+    $host = 'www.google.se',
     $alerts = [],
     $slaves = [],
     $nomasterpoll = false,
@@ -70,7 +70,7 @@ define smokeping::target (
     # Top level
     if $hierarchy_level == 1 {
         concat::fragment { "target-${hierarchy_level}-${name}":
-            target  => '/etc/smokeping/config.d/Targets',
+            target  => '/opt/smokeping/config.d/Targets',
             order   => '11',
             content => "@include ${filename}\n",
         }

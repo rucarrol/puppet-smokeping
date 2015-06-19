@@ -47,7 +47,7 @@ define smokeping::slave(
 
   @@concat::fragment { $name:
       order   => 20,
-      target  => '/etc/smokeping/config.d/Slaves',
+      target  => '/opt/smokeping/config.d/Slaves',
       content => "@include ${filename}\n",
       tag     => "smokeping-slave-${master}",
   }
