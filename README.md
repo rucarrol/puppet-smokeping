@@ -1,141 +1,16 @@
-# SmokePing Puppet module
+# SmokePing Puppet module - CentOS 6 version
 
-Puppet module to completely manage a SmokePing installation.
-Includes managing of Master/Slave installation and the menu hierarchy.
+This is a clone of the [Puppet module to manage SmokePing](http://tobrunet.ch/2013/02/puppet-module-to-manage-smokeping/) by tobrunet. 
 
-Some background information can be found here: [Puppet module to manage SmokePing](http://tobrunet.ch/2013/02/puppet-module-to-manage-smokeping/)
+Goal is to add CentOS 6 support, as an ongoing project.
 
-## Features
+Notes, in no real order:
 
-* Master/Slave/Standalone SmokePing configuration possible
-* Menu hierarchy implemented
-* Define Probes and Alert patterns
-* Config files managed with templates
-* Uses exported resources to configure Slaves on the Master (tag: smokeping-slave)
-* Automatically generates a shared secret for Master/Slave configuration (tag: smokeping-slave-secret)
+- Used [GhettoForge smokeping](http://ghettoforge.org/index.php/Main_Page) package.
+- Config file is now more hierarchial to make it more readable. 
+- TODO: forced install directory to /opt/smokeping. Need to make this configurable.
+- TODO: Make less ghetto init script.
+- TODO: Fix/implement slave config/implementation
+- TODO: Make deployment of targets less confusing. 
+- TODO: Fix anything broken.
 
-Tested on Ubuntu 12.04 LTS
-
-## Dependencies
-  - [puppetlabs-concat](https://github.com/puppetlabs/puppet-concat)
-  - [puppetlabs-stdlib](https://github.com/puppetlabs/puppet-stdlib)
-
-## Example
-
-### Standalone SmokePing instance
-```puppet
-# install a standalone instance on a server with default values (see init.pp for 
-# parameter documentation
-class { '::smokeping':
-    mode => 'standalone',
-}
-```
-
-### Master SmokePing instance
-```puppet
-# install a master instance on a server with default values (see init.pp for 
-# parameter documentation. You must have a slave, or this will not work!
-class { '::smokeping':
-    mode => 'master',
-}
-```
-
-### Slave SmokePing instance
-```puppet
-class { '::smokeping':
-    mode           => 'slave',
-    slave_name     => $::hostname,
-    master_url     => 'http://myserver.tld/smokeping/smokeping.cgi',
-    slave_location => 'zurich',
-}
-```
-This configures the server as slaves and adds the slave definition automatically to the
-master using exported resources.
-
-### Probes
-```puppet
-$probes = [
-    { name => 'FPing', binary => '/usr/bin/fping' },
-    { name => 'FPing6', binary => '/usr/bin/fping6' },
-]
-Class['::smokeping'] {
-  probes => $probes
-}
-```
-
-### Alerts
-```puppet
-$alerts = [ {
-  { name    => 'bigloss',
-  type    => 'loss',
-  pattern => '==0%,==0%,==0%,==0%,>0%,>0%,>0%',
-  comment => 'suddenly there is packet loss' },
-
-  { name    => 'startloss',
-  type    => 'loss',
-  pattern => '==S,>0%,>0%,>0%',
-  comment => 'loss at startup' },
-
-  { name    => 'noloss',
-  type    => 'loss',
-  pattern => '>0%,>0%,>0%,==0%,==0%,==0%,==0%',
-  comment => 'there was loss and now its reachable again' },
-] }
-Class['::smokeping'] {
-  alerts => $alerts
-}
-```
-
-### Targets
-```puppet
-# Top Level
-smokeping::target { 'World':
-    menu      => 'World',
-    pagetitle => 'Connection to the World',
-    alerts    => [ 'bigloss', 'noloss' ]
-}
-
-smokeping::target { 'GoogleCH':
-    hierarchy_parent => 'World',
-    hierarchy_level  => 2,
-    menu             => 'google.ch',
-    pagetitle        => 'Google',
-}
-smokeping::target { 'GoogleCHIPv4':
-    hierarchy_parent => 'GoogleCH',
-    hierarchy_level  => 3,
-    menu             => 'google.ch IPv4',
-    host             => 'google.ch',
-    slaves           => ['slave1'],
-}
-smokeping::target { 'GoogleCHIPv6':
-    hierarchy_parent => 'GoogleCH',
-    hierarchy_level  => 3,
-    menu             => 'google.ch IPv6',
-    host             => 'google.ch',
-    probe            => 'FPing6'
-    slaves           => ['slave1'],
-}
-smokeping::target { 'GoogleCHCurl':
-    hierarchy_parent => 'GoogleCH',
-    hierarchy_level  => 3,
-    menu             => 'google.ch Curl',
-    host             => 'google.ch',
-    probe            => 'Curl',
-    options          => {
-      urlformat => 'http://%host%/',
-    }
-}
-```
-
-## License / Author
-
-The module is written by
-
-* Tobias Brunner <tobias@tobru.ch>
-
-Licensed under Apache License, Version 2.0, Copyright 2015 by Tobias Brunner
-
-## Contibutors
-
-See: [Github Contributors](https://github.com/tobru/puppet-smokeping/graphs/contributors)
